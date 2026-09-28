@@ -1,0 +1,146 @@
+/* ===== Colores y tipografías de El Brasero ===== */
+:root {
+  --negro: #000000;
+  --superficie: #121212;
+  --superficie-2: #1a1a1a;
+  --borde: #2a2a2a;
+  --rojo: #e11d1d;
+  --rojo-oscuro: #9f1212;
+  --brasa: #ff6a1a;
+  --oro: #ffb703;
+  --texto: #f5f5f5;
+  --texto-suave: #a3a3a3;
+  --radio: 16px;
+  --titulos: 'Bebas Neue', Impact, sans-serif;
+  --cuerpo: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { color-scheme: dark; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--cuerpo);
+  background: var(--negro);
+  color: var(--texto);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Brillo tipo brasa en la parte de abajo */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 115%, rgba(225, 29, 29, 0.22), transparent 70%),
+    radial-gradient(ellipse 50% 30% at 50% 115%, rgba(255, 106, 26, 0.18), transparent 70%);
+}
+
+/* Quita el fondo negro del logo para que se funda con la página */
+.logo-mezcla { mix-blend-mode: lighten; }
+
+/* Oculta algo a la vista pero lo deja para lectores de pantalla */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--rojo);
+}
+
+/* Botón principal rojo */
+.btn-primario {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  font-family: var(--titulos);
+  font-size: 24px;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--rojo), var(--rojo-oscuro));
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -10px rgba(225, 29, 29, 0.7);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+.btn-primario:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 14px 34px -10px rgba(225, 29, 29, 0.9);
+}
+.btn-primario:active { transform: translateY(0); }
+.btn-primario:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.btn-primario:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+.btn-primario svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Cajas de texto */
+.campo {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--negro);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  color: var(--texto);
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.campo::placeholder { color: #666666; }
+.campo:focus {
+  outline: none;
+  border-color: var(--rojo);
+  box-shadow: 0 0 0 3px rgba(225, 29, 29, 0.2);
+}
+
+/* Mensajes de error */
+.alerta {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: rgba(225, 29, 29, 0.12);
+  border: 1px solid rgba(225, 29, 29, 0.5);
+  border-radius: 12px;
+  color: #ffb3b3;
+  font-size: 14px;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Si la persona tiene desactivadas las animaciones en su compu, se respetan */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

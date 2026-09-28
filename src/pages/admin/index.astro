@@ -1,0 +1,445 @@
+---
+import '../../styles/brasero.css';
+import { pool } from '../../lib/db';
+
+export const prerender = false;
+
+// Si no inició sesión, lo mandamos al login
+const token = import.meta.env.ADMIN_TOKEN;
+if (!token || Astro.cookies.get('admin_sesion')?.value !== token) {
+  return Astro.redirect('/admin/login');
+}
+
+const preguntas = [
+  { id: 'tiempo', nombre: 'Tiempo de preparación', corto: 'Tiempo' },
+  { id: 'presentacion', nombre: 'Presentación', corto: 'Presentación' },
+  { id: 'mesero', nombre: 'Atención del mesero', corto: 'Mesero' },
+  { id: 'sabor', nombre: 'Sabor de los platillos', corto: 'Sabor' },
+];
+
+let encuestas: any[] = [];
+let errorBD = '';
+
+try {
+  const [filas] = await pool.query('SELECT * FROM encuestas ORDER BY fecha DESC');
+  encuestas = filas as any[];
+} catch (e) {
+  console.error('Error al leer encuestas:', e);
+  errorBD = 'No se pudo conectar a la base de datos. Revisa que MySQL esté encendido.';
+}
+
+const total = encuestas.length;
+
+const promedios = preguntas.map((p) =>
+  total ? Number((encuestas.reduce((suma, e) => suma + Number(e[p.id]), 0) / total).toFixed(2)) : 0
+);
+
+const promedioGeneral = total ? promedios.reduce((a, b) => a + b, 0) / promedios.length : 0;
+
+const conComentario = encuestas.filter((e) => e.mejorar && String(e.mejorar).trim() !== '').length;
+
+// Cuántas personas dieron 1, 2, 3, 4 y 5 estrellas en cada pregunta
+const distribucion = [1, 2, 3, 4, 5].map((estrella) =>
+  preguntas.map((p) => encuestas.filter((e) => Number(e[p.id]) === estrella).length)
+);
+
+const cortos = preguntas.map((p) => p.corto);
+
+function formatoFecha(fecha: any) {
+  return new Date(fecha).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function claseNota(n: number) {
+  if (n >= 4) return 'nota nota-alta';
+  if (n === 3) return 'nota nota-media';
+  return 'nota nota-baja';
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/webp" href="/icon.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>El Brasero | Panel del administrador</title>
+  </head>
+  <body>
+    <main>
+      <header class="topbar">
+        <div class="marca">
+          <img src="/brasero.webp" alt="El Brasero" class="logo-mezcla" />
+          <div>
+            <p class="eyebrow">Panel del administrador</p>
+            <h1>Resultados de la encuesta</h1>
+          </div>
+        </div>
+        <a href="/admin/logout" class="btn-secundario">
+          Cerrar sesión
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 12H4M9 7l-5 5 5 5M20 4v16" /></svg>
+        </a>
+      </header>
+
+      {errorBD && <p class="alerta" role="alert">{errorBD}</p>}
+
+      <section class="kpis">
+        <div class="kpi destacado" style="--i: 0">
+          <p class="kpi-etiqueta">Encuestas recibidas</p>
+          <p class="kpi-valor">{total}</p>
+          <p class="kpi-nota">{conComentario} con comentario</p>
+        </div>
+        <div class="kpi destacado" style="--i: 1">
+          <p class="kpi-etiqueta">Promedio general</p>
+          <p class="kpi-valor">{promedioGeneral.toFixed(2)}<small>/ 5</small></p>
+          <div class="medidor"><span style={`width: ${(promedioGeneral / 5) * 100}%`}></span></div>
+        </div>
+        {preguntas.map((p, i) => (
+          <div class="kpi" style={`--i: ${i + 2}`}>
+            <p class="kpi-etiqueta">{p.nombre}</p>
+            <p class="kpi-valor">{promedios[i].toFixed(2)}<small>/ 5</small></p>
+            <div class="medidor"><span style={`width: ${(promedios[i] / 5) * 100}%`}></span></div>
+          </div>
+        ))}
+      </section>
+
+      {total > 0 ? (
+        <>
+          <section class="paneles">
+            <div class="panel">
+              <h2>Promedio por pregunta</h2>
+              <p class="descripcion">Calificación promedio de 1 a 5 estrellas</p>
+              <div class="grafica"><canvas id="graficaPromedios"></canvas></div>
+            </div>
+            <div class="panel">
+              <h2>Distribución de estrellas</h2>
+              <p class="descripcion">Cuántos clientes dieron cada calificación</p>
+              <div class="grafica"><canvas id="graficaDistribucion"></canvas></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Todas las respuestas</h2>
+            <p class="descripcion">{total} encuestas, de la más reciente a la más antigua</p>
+            <div class="tabla-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Tiempo</th>
+                    <th>Presentación</th>
+                    <th>Mesero</th>
+                    <th>Sabor</th>
+                    <th>¿Qué podemos mejorar?</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {encuestas.map((e) => (
+                    <tr>
+                      <td class="suave">{e.id}</td>
+                      <td class="suave">{formatoFecha(e.fecha)}</td>
+                      <td><span class={claseNota(e.tiempo)}>{e.tiempo} ★</span></td>
+                      <td><span class={claseNota(e.presentacion)}>{e.presentacion} ★</span></td>
+                      <td><span class={claseNota(e.mesero)}>{e.mesero} ★</span></td>
+                      <td><span class={claseNota(e.sabor)}>{e.sabor} ★</span></td>
+                      <td class="comentario">
+                        {e.mejorar ? e.mejorar : <span class="sin-comentario">Sin comentario</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      ) : (
+        !errorBD && (
+          <div class="vacio">
+            <strong>Todavía no hay encuestas</strong>
+            Cuando los clientes respondan, sus resultados aparecerán aquí.
+          </div>
+        )
+      )}
+    </main>
+
+    <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script is:inline define:vars={{ cortos, promedios, distribucion }}>
+      if (document.getElementById('graficaPromedios')) {
+        Chart.defaults.color = '#a3a3a3';
+        Chart.defaults.borderColor = '#232323';
+        Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+
+        new Chart(document.getElementById('graficaPromedios'), {
+          type: 'bar',
+          data: {
+            labels: cortos,
+            datasets: [{
+              label: 'Promedio',
+              data: promedios,
+              backgroundColor: '#e11d1d',
+              hoverBackgroundColor: '#ff3b3b',
+              borderRadius: 8,
+              maxBarThickness: 56,
+            }],
+          },
+          options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { min: 0, max: 5, ticks: { stepSize: 1 } },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+
+        const colores = ['#3f0f0f', '#7a1616', '#b91c1c', '#e11d1d', '#ffb703'];
+        new Chart(document.getElementById('graficaDistribucion'), {
+          type: 'bar',
+          data: {
+            labels: cortos,
+            datasets: distribucion.map((datos, i) => ({
+              label: `${i + 1} ★`,
+              data: datos,
+              backgroundColor: colores[i],
+              maxBarThickness: 36,
+            })),
+          },
+          options: {
+            indexAxis: 'y',
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 8 },
+              },
+            },
+            scales: {
+              x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
+              y: { stacked: true, grid: { display: false } },
+            },
+          },
+        });
+      }
+    </script>
+
+    <style is:global>
+      main {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 24px 16px 64px;
+      }
+
+      /* Barra de arriba */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding-bottom: 20px;
+        margin-bottom: 28px;
+        border-bottom: 1px solid var(--borde);
+        animation: aparecer 0.5s ease both;
+      }
+      .marca {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .marca img { width: 76px; height: auto; }
+      .marca .eyebrow { margin-bottom: 2px; }
+      .marca h1 {
+        margin: 0;
+        font-family: var(--titulos);
+        font-weight: 400;
+        font-size: 36px;
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+      .btn-secundario {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--texto);
+        text-decoration: none;
+        border: 1px solid var(--borde);
+        border-radius: 999px;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .btn-secundario:hover {
+        border-color: var(--rojo);
+        background: rgba(225, 29, 29, 0.1);
+      }
+      .btn-secundario svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* Tarjetas de números */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .kpi {
+        position: relative;
+        overflow: hidden;
+        padding: 18px;
+        background: linear-gradient(180deg, var(--superficie-2), var(--superficie));
+        border: 1px solid var(--borde);
+        border-radius: var(--radio);
+        animation: aparecer 0.5s ease both;
+        animation-delay: calc(var(--i) * 60ms + 100ms);
+      }
+      .kpi.destacado::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--rojo), var(--brasa));
+      }
+      .kpi-etiqueta {
+        margin: 0;
+        font-size: 13px;
+        color: var(--texto-suave);
+      }
+      .kpi-valor {
+        margin: 8px 0 0;
+        font-family: var(--titulos);
+        font-size: 46px;
+        line-height: 1;
+        letter-spacing: 0.02em;
+      }
+      .kpi-valor small {
+        margin-left: 4px;
+        font-family: var(--cuerpo);
+        font-size: 14px;
+        color: var(--texto-suave);
+      }
+      .kpi-nota {
+        margin: 10px 0 0;
+        font-size: 12px;
+        color: var(--texto-suave);
+      }
+      .medidor {
+        height: 6px;
+        margin-top: 12px;
+        overflow: hidden;
+        background: #262626;
+        border-radius: 999px;
+      }
+      .medidor span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, var(--brasa), var(--oro));
+        border-radius: 999px;
+      }
+
+      /* Paneles de gráficas y tabla */
+      .paneles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .panel {
+        min-width: 0;
+        padding: 20px;
+        background: var(--superficie);
+        border: 1px solid var(--borde);
+        border-radius: var(--radio);
+        animation: aparecer 0.5s ease both;
+        animation-delay: 0.4s;
+      }
+      .panel h2 {
+        margin: 0 0 4px;
+        font-family: var(--titulos);
+        font-weight: 400;
+        font-size: 28px;
+        letter-spacing: 0.03em;
+      }
+      .descripcion {
+        margin: 0 0 16px;
+        font-size: 13px;
+        color: var(--texto-suave);
+      }
+      .grafica {
+        position: relative;
+        height: 280px;
+      }
+
+      /* Tabla */
+      .tabla-scroll { overflow-x: auto; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th {
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--texto-suave);
+        border-bottom: 1px solid var(--borde);
+        white-space: nowrap;
+      }
+      td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #1f1f1f;
+        white-space: nowrap;
+        vertical-align: top;
+      }
+      tbody tr { transition: background 0.15s; }
+      tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+      td.suave { color: var(--texto-suave); }
+      td.comentario {
+        min-width: 240px;
+        white-space: normal;
+        line-height: 1.45;
+      }
+      .sin-comentario { color: #555555; font-style: italic; }
+      .nota {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 999px;
+      }
+      .nota-alta { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+      .nota-media { background: rgba(255, 183, 3, 0.12); color: var(--oro); }
+      .nota-baja { background: rgba(225, 29, 29, 0.14); color: #ff6b6b; }
+
+      .vacio {
+        padding: 56px 16px;
+        text-align: center;
+        color: var(--texto-suave);
+        border: 1px dashed var(--borde);
+        border-radius: var(--radio);
+      }
+      .vacio strong {
+        display: block;
+        margin-bottom: 6px;
+        font-family: var(--titulos);
+        font-weight: 400;
+        font-size: 30px;
+        color: var(--texto);
+      }
+    </style>
+  </body>
+</html>

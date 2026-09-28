@@ -12,7 +12,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^6.1.5"
+    "@astrojs/node": "^10.1.4",
+    "astro": "^6.1.5",
+    "mysql2": "^3.24.4"
   },
   "allowScripts": {
     "esbuild": true

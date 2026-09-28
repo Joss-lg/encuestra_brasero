@@ -1,0 +1,13 @@
+CREATE DATABASE IF NOT EXISTS el_brasero CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE el_brasero;
+
+CREATE TABLE IF NOT EXISTS encuestas (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tiempo TINYINT NOT NULL,
+  presentacion TINYINT NOT NULL,
+  mesero TINYINT NOT NULL,
+  sabor TINYINT NOT NULL,
+  mejorar TEXT,
+  fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+);
