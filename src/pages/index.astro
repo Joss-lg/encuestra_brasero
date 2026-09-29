@@ -29,10 +29,7 @@ const totalEstrellas = preguntas.filter((p) => p.tipo === 'estrellas').length;
 
     <main>
       <header class="hero">
-        <!-- Acceso escondido: al dar clic al logo se abre el login del administrador -->
-        <a href="/admin/login" class="logo-link">
-          <img src="/brasero.webp" alt="El Brasero" class="logo logo-mezcla" />
-        </a>
+        <img src="/brasero.webp" alt="El Brasero" class="logo logo-mezcla" />
         <p class="eyebrow">Encuesta de satisfacción</p>
         <h1>¿Cómo estuvo tu <span>experiencia</span>?</h1>
         <p class="subtitulo">Son solo 5 preguntas. Tu opinión nos ayuda a mejorar cada platillo.</p>
@@ -210,10 +207,6 @@ const totalEstrellas = preguntas.filter((p) => p.tipo === 'estrellas').length;
         text-align: center;
         margin-bottom: 32px;
         animation: aparecer 0.6s ease both;
-      }
-      .logo-link {
-        display: inline-block;
-        cursor: default;
       }
       .logo {
         width: 190px;
