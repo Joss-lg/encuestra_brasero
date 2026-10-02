@@ -11,10 +11,11 @@ if (!token || Astro.cookies.get('admin_sesion')?.value !== token) {
 }
 
 const preguntas = [
-  { id: 'tiempo', nombre: 'Tiempo de preparación', corto: 'Tiempo' },
-  { id: 'presentacion', nombre: 'Presentación', corto: 'Presentación' },
-  { id: 'mesero', nombre: 'Atención del mesero', corto: 'Mesero' },
-  { id: 'sabor', nombre: 'Sabor de los platillos', corto: 'Sabor' },
+  { id: 'tiempo',         nombre: 'Tiempo de espera (platillos)', corto: 'T. Platillos' },
+  { id: 'sabor',          nombre: 'Sabor de los platillos',       corto: 'S. Platillos' },
+  { id: 'tiempo_bebidas', nombre: 'Tiempo de espera (bebidas)',   corto: 'T. Bebidas'   },
+  { id: 'sabor_bebidas',  nombre: 'Sabor de las bebidas',         corto: 'S. Bebidas'   },
+  { id: 'mesero',         nombre: 'Atención del mesero',          corto: 'Mesero'       },
 ];
 
 let encuestas: any[] = [];
@@ -128,10 +129,11 @@ function claseNota(n: number) {
                   <tr>
                     <th>#</th>
                     <th>Fecha</th>
-                    <th>Tiempo</th>
-                    <th>Presentación</th>
+                    <th>T. Platillos</th>
+                    <th>S. Platillos</th>
+                    <th>T. Bebidas</th>
+                    <th>S. Bebidas</th>
                     <th>Mesero</th>
-                    <th>Sabor</th>
                     <th>¿Qué podemos mejorar?</th>
                   </tr>
                 </thead>
@@ -141,9 +143,10 @@ function claseNota(n: number) {
                       <td class="suave">{e.id}</td>
                       <td class="suave">{formatoFecha(e.fecha)}</td>
                       <td><span class={claseNota(e.tiempo)}>{e.tiempo} ★</span></td>
-                      <td><span class={claseNota(e.presentacion)}>{e.presentacion} ★</span></td>
-                      <td><span class={claseNota(e.mesero)}>{e.mesero} ★</span></td>
                       <td><span class={claseNota(e.sabor)}>{e.sabor} ★</span></td>
+                      <td><span class={claseNota(e.tiempo_bebidas)}>{e.tiempo_bebidas} ★</span></td>
+                      <td><span class={claseNota(e.sabor_bebidas)}>{e.sabor_bebidas} ★</span></td>
+                      <td><span class={claseNota(e.mesero)}>{e.mesero} ★</span></td>
                       <td class="comentario">
                         {e.mejorar ? e.mejorar : <span class="sin-comentario">Sin comentario</span>}
                       </td>

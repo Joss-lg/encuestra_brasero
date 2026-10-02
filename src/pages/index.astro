@@ -2,11 +2,12 @@
 import '../styles/brasero.css';
 
 const preguntas = [
-  { id: 'tiempo', texto: '¿Cómo calificarías el tiempo de preparación de tus platillos?', tipo: 'estrellas' },
-  { id: 'presentacion', texto: '¿Qué te pareció la presentación de los platillos?', tipo: 'estrellas' },
-  { id: 'mesero', texto: '¿Cómo fue la atención de tu mesero?', tipo: 'estrellas' },
-  { id: 'sabor', texto: '¿Cómo calificarías el sabor de los platillos?', tipo: 'estrellas' },
-  { id: 'mejorar', texto: '¿Qué podemos mejorar?', tipo: 'texto' },
+  { id: 'tiempo',         texto: '¿Cómo calificarías el tiempo de espera de tus platillos?', tipo: 'estrellas' },
+  { id: 'sabor',          texto: '¿Cómo calificarías el sabor de tus platillos?',             tipo: 'estrellas' },
+  { id: 'tiempo_bebidas', texto: '¿Cómo calificarías el tiempo de espera de tus bebidas?',   tipo: 'estrellas' },
+  { id: 'sabor_bebidas',  texto: '¿Cómo calificarías el sabor de tus bebidas?',              tipo: 'estrellas' },
+  { id: 'mesero',         texto: '¿Cómo fue la atención de tu mesero?',                       tipo: 'estrellas' },
+  { id: 'mejorar',        texto: '¿Qué podemos mejorar?',                                     tipo: 'texto' },
 ];
 
 const totalEstrellas = preguntas.filter((p) => p.tipo === 'estrellas').length;
@@ -32,7 +33,7 @@ const totalEstrellas = preguntas.filter((p) => p.tipo === 'estrellas').length;
         <img src="/brasero.webp" alt="El Brasero" class="logo logo-mezcla" />
         <p class="eyebrow">Encuesta de satisfacción</p>
         <h1>¿Cómo estuvo tu <span>experiencia</span>?</h1>
-        <p class="subtitulo">Son solo 5 preguntas. Tu opinión nos ayuda a mejorar cada platillo.</p>
+        <p class="subtitulo">Son solo 6 preguntas. Tu opinión nos ayuda a mejorar cada platillo y bebida.</p>
         <p class="contador" id="contador">
           <strong id="respondidas">0</strong> de {totalEstrellas} calificadas
         </p>

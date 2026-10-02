@@ -3,7 +3,7 @@ import { pool } from '../../lib/db';
 
 export const prerender = false;
 
-const campos = ['tiempo', 'presentacion', 'mesero', 'sabor'];
+const campos = ['tiempo', 'sabor', 'tiempo_bebidas', 'sabor_bebidas', 'mesero'];
 
 function responder(datos: object, status = 200) {
   return new Response(JSON.stringify(datos), {
@@ -25,7 +25,7 @@ export const POST: APIRoute = async ({ request }) => {
     const mejorar = String(datos.mejorar ?? '').trim().slice(0, 1000);
 
     await pool.query(
-      'INSERT INTO encuestas (tiempo, presentacion, mesero, sabor, mejorar) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO encuestas (tiempo, sabor, tiempo_bebidas, sabor_bebidas, mesero, mejorar) VALUES (?, ?, ?, ?, ?, ?)',
       [...notas, mejorar]
     );
 
